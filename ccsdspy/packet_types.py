@@ -174,7 +174,7 @@ class FixedLength(_BasePacket):
             self._converters,
             "fixed_length",
             include_primary_header=True,
-            file_is_bytes=False,
+            file_is_bytes=file_is_bytes,
         )
 
         # inspect the primary header and issue warning if appropriate
@@ -294,7 +294,7 @@ class VariableLength(_BasePacket):
         # remove them after.
         packet_arrays = _load(
             file, self._fields, self._converters, "variable_length", include_primary_header=True,
-            file_is_bytes=False,
+            file_is_bytes=file_is_bytes,
         )
 
         # inspect the primary header and issue warning if appropriate
