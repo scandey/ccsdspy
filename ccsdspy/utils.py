@@ -169,7 +169,7 @@ def split_by_apid(mixed_file, valid_apids=None, file_is_bytes=False):
 
     stream_by_apid = {}
 
-    for packet_bytes in iter_packet_bytes(mixed_file, file_is_bytes):
+    for packet_bytes in iter_packet_bytes(mixed_file, file_is_bytes=file_is_bytes):
         apid = get_packet_apid(packet_bytes[:PRIMARY_HEADER_NUM_BYTES])
 
         if valid_apids is not None and apid not in valid_apids:
