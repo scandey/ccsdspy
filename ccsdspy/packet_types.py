@@ -141,7 +141,7 @@ class FixedLength(_BasePacket):
 
         self._init(fields)
 
-    def load(self, file, include_primary_header=False):
+    def load(self, file, include_primary_header=False, file_is_bytes=False):
         """Decode a file-like object containing a sequence of these packets.
 
         Parameters
@@ -150,6 +150,8 @@ class FixedLength(_BasePacket):
            Path to file on the local file system, or file-like object
         include_primary_header : bool
            If True, provides the primary header in the output
+        file_is_bytes: bool
+            If True, process file as a byte array directly without .read()
 
         Returns
         -------
@@ -172,6 +174,7 @@ class FixedLength(_BasePacket):
             self._converters,
             "fixed_length",
             include_primary_header=True,
+            file_is_bytes=False,
         )
 
         # inspect the primary header and issue warning if appropriate
@@ -259,7 +262,7 @@ class VariableLength(_BasePacket):
 
         self._init(fields)
 
-    def load(self, file, include_primary_header=False):
+    def load(self, file, include_primary_header=False, file_is_bytes=False):
         """Decode a file-like object containing a sequence of these packets.
 
         Parameters
@@ -268,6 +271,8 @@ class VariableLength(_BasePacket):
            Path to file on the local file system, or file-like object
         include_primary_header : bool
            If True, provides the primary header in the output
+        file_is_bytes: bool
+            If True, process file as a byte array directly without .read()
 
         Returns
         -------
@@ -288,7 +293,8 @@ class VariableLength(_BasePacket):
         # they didn't want the primary header fields, we parse for them and then
         # remove them after.
         packet_arrays = _load(
-            file, self._fields, self._converters, "variable_length", include_primary_header=True
+            file, self._fields, self._converters, "variable_length", include_primary_header=True,
+            file_is_bytes=False,
         )
 
         # inspect the primary header and issue warning if appropriate
@@ -581,7 +587,7 @@ def _get_fields_csv_file(csv_file):
     return fields
 
 
-def _load(file, fields, converters, decoder_name, include_primary_header=False):
+def _load(file, fields, converters, decoder_name, include_primary_header=False, file_is_bytes=False):
     """Decode a file-like object containing a sequence of these packets.
 
     Parameters
@@ -597,6 +603,8 @@ def _load(file, fields, converters, decoder_name, include_primary_header=False):
        String identifying which decoder to use.
     include_primary_header: bool
        If True, provides the primary header in the output
+    file_is_bytes: bool
+       If True, process file as a byte array directly without .read()
 
     Returns
     -------
@@ -608,8 +616,12 @@ def _load(file, fields, converters, decoder_name, include_primary_header=False):
     ValueError
       the decoder_name is not one of the allowed values
     """
-    if hasattr(file, "read"):
+
+
+    if hasattr(file, "read") and not file_is_bytes:
         file_bytes = np.frombuffer(file.read(), "u1")
+    elif file_is_bytes:
+        file_bytes = np.frombuffer(file, "u1")
     else:
         file_bytes = np.fromfile(file, "u1")
 
