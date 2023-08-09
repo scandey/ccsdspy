@@ -30,7 +30,7 @@ get_packet_total_bytes.__doc__ = decode._get_packet_total_bytes.__doc__
 get_packet_apid.__doc__ = decode._get_packet_apid.__doc__
 
 
-def iter_packet_bytes(file, include_primary_header=True):
+def iter_packet_bytes(file, include_primary_header=True, file_is_bytes=False):
     """Iterate through packets as raw bytes objects, in the order they appear in a file.
 
     This function works with mixed files containing multiple APIDs, which may
@@ -51,8 +51,10 @@ def iter_packet_bytes(file, include_primary_header=True):
        Bytes associated with each packet as it appears in the file. When
        include_primary_header=False, the primary header bytes are excluded.
     """
-    if hasattr(file, "read"):
+    if hasattr(file, "read") and not file_is_bytes:
         file_bytes = np.frombuffer(file.read(), "u1")
+    elif file_is_bytes:
+        file_bytes = np.frombuffer(file, "u1")
     else:
         file_bytes = np.fromfile(file, "u1")
 
@@ -140,7 +142,7 @@ def read_primary_headers(file):
     return header_arrays
 
 
-def split_by_apid(mixed_file, valid_apids=None):
+def split_by_apid(mixed_file, valid_apids=None, file_is_bytes=False):
     """Split a stream of mixed APIDs into separate streams by APID.
 
     This works with a mix of both fixed length and variable length packets.
@@ -152,6 +154,8 @@ def split_by_apid(mixed_file, valid_apids=None):
     valid_apids: list of int, None
        Optional list of valid APIDs. If specified, warning will be issued when
        an APID is encountered outside this list.
+    file_is_bytes : Bool
+       If True, file is already a 
 
     Returns
     -------
@@ -165,7 +169,7 @@ def split_by_apid(mixed_file, valid_apids=None):
 
     stream_by_apid = {}
 
-    for packet_bytes in iter_packet_bytes(mixed_file):
+    for packet_bytes in iter_packet_bytes(mixed_file, file_is_bytes):
         apid = get_packet_apid(packet_bytes[:PRIMARY_HEADER_NUM_BYTES])
 
         if valid_apids is not None and apid not in valid_apids:
